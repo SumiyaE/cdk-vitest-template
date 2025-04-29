@@ -5,6 +5,6 @@ export default defineConfig({
     test: {
         root: ".",
         environment: "node",
-        include: ["**/*.{test,spec}.ts"]
+        include: ["**/*.{test,spec}.ts"],
     }
 });

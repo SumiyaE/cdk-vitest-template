@@ -19,9 +19,6 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "types": [
-      "vitest/globals"
-    ],
   },
   "exclude": [
     "node_modules",

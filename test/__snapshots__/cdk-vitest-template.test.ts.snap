@@ -16,19 +16,10 @@ exports[`SQS Queue Created 1`] = `
       ],
       "Properties": {
         "Code": {
-          "ZipFile": "
-        exports.handler = async function(event) {
-          return {
-            statusCode: 200,
-            body: JSON.stringify('Hello World!'),
-          };
-        };
-      ",
-        },
-        "Environment": {
-          "Variables": {
-            "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
+          "S3Key": "dc0de65ee2a7e4fead9d4c96921340830392631e5c6873a1f1aa2fcbfc568f2a.zip",
         },
         "Handler": "index.handler",
         "Role": {
@@ -37,7 +28,7 @@ exports[`SQS Queue Created 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs22.x",
       },
       "Type": "AWS::Lambda::Function",
     },

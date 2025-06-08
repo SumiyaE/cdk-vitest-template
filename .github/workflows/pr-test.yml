@@ -1,0 +1,51 @@
+# PRテストワークフロー
+# mainブランチへのPR作成時に自動実行され、テスト結果をPRにコメントする
+name: PR Test
+
+# PRが作成・更新された時のみ実行
+on:
+  pull_request:
+    branches: [ main ]
+
+# PRにコメントするため、書き込み権限が必要
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Node.js環境をセットアップ（npmキャッシュ有効）
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    # 依存関係をインストール
+    - run: npm ci
+
+    # 古いテスト結果コメントを非表示化
+    - name: Hide old test comments
+      uses: int128/hide-comment-action@v1
+      with:
+        contains: '<!-- PR_TEST_BOT_COMMENT -->'
+
+    # テスト実行と結果に応じたPRコメント投稿
+    - name: Run tests and comment
+      run: |
+        if npm test -- --run; then
+          gh pr comment ${{ github.event.number }} --body-file .github/templates/test-success.md
+          exit 0
+        elif npm test -- --run 2>&1 | grep -q "Snapshots.*failed\|Snapshot.*mismatched"; then
+          gh pr comment ${{ github.event.number }} --body-file .github/templates/test-detect-diff.md
+          exit 1
+        else
+          gh pr comment ${{ github.event.number }} --body-file .github/templates/test-failure.md
+          exit 1
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

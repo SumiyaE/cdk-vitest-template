@@ -1,0 +1,82 @@
+name: PR Snapshot Update
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-snapshots:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'update snapshot')
+    runs-on: ubuntu-latest
+
+    steps:
+    # 実行開始をリアクションで通知
+    - name: Add eyes reaction
+      run: |
+        gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+          -f content="eyes"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # PRのブランチ名を取得してチェックアウト
+    - name: Get PR branch and checkout
+      run: |
+        PR_BRANCH=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }} --jq '.head.ref')
+        echo "head_ref=$PR_BRANCH" >> $GITHUB_OUTPUT
+      id: pr-info
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ steps.pr-info.outputs.head_ref }}
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - run: npm ci
+
+    # テスト実行と状態判定
+    - name: Check test status
+      id: check
+      run: |
+        if npm test -- --run; then
+          echo "status=skip" >> $GITHUB_OUTPUT
+        elif npm test -- --run 2>&1 | grep -q "Snapshots.*failed\|Snapshot.*mismatched"; then
+          echo "status=snapshot-diff" >> $GITHUB_OUTPUT
+        else
+          echo "status=error" >> $GITHUB_OUTPUT
+        fi
+
+    # スナップショット更新（必要な場合のみ）
+    - name: Update snapshots
+      if: steps.check.outputs.status == 'snapshot-diff'
+      run: |
+        npm test -- -u
+        git config user.email "action@github.com"
+        git config user.name "GitHub Action"
+        git add test/__snapshots__/
+        git commit -m "test: スナップショット自動更新"
+        git push origin ${{ steps.pr-info.outputs.head_ref }}
+
+    - name: Comment result
+      run: |
+        STATUS="${{ steps.check.outputs.status }}"
+        if [ "${{ steps.check.outputs.status }}" = "snapshot-diff" ] && [ "${{ job.status }}" = "success" ]; then
+          STATUS="updated"
+        fi
+
+        case "$STATUS" in
+          skip) gh pr comment ${{ github.event.issue.number }} --body-file .github/templates/snapshot-update-skip.md ;;
+          updated) gh pr comment ${{ github.event.issue.number }} --body-file .github/templates/snapshot-update-success.md ;;
+          error) gh pr comment ${{ github.event.issue.number }} --body-file .github/templates/snapshot-update-error.md ;;
+        esac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

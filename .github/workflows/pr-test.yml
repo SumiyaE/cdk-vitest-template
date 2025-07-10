@@ -22,7 +22,7 @@ jobs:
     # Node.js環境をセットアップ（npmキャッシュ有効）
     - uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
 
     # 依存関係をインストール

@@ -31,7 +31,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ steps.pr-info.outputs.head_ref }}

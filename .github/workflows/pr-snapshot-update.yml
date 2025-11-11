@@ -36,7 +36,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ steps.pr-info.outputs.head_ref }}
 
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: 'npm'

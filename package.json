@@ -18,7 +18,7 @@
     "vitest": "^4.0.0"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.232.0",
+    "aws-cdk-lib": "2.232.1",
     "constructs": "^10.0.0"
   }
 }

@@ -14,7 +14,7 @@
     "@types/node": "24.12.0",
     "aws-cdk": "2.1112.0",
     "ts-node": "^10.9.2",
-    "typescript": "~5.9.0",
+    "typescript": "~6.0.0",
     "vitest": "^4.0.0"
   },
   "dependencies": {
